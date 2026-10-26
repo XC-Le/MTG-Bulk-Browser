@@ -178,7 +178,7 @@ function row(n,code,d){
   const alts=d.cand[n]?d.cand[n].filter(k=>k!==code).slice(0,6).map(k=>k.toUpperCase()).join(', '):'';
   const f=S.found[n];
   return `<div class="item ${f?'found':''}"><input type="checkbox" data-f="${esc(n)}" ${f?'checked':''}>
-  <div class="nm hv" data-n="${esc(n)}">${esc(n)}${alts&&!f?`<div class="alt">Also in: ${alts}</div>`:''}</div>
+  <div class="nm hv" data-n="${esc(n)}" data-s="${esc(code||'')}">${esc(n)}${alts&&!f?`<div class="alt">Also in: ${alts}</div>`:''}</div>
   <span class="pr">${code?priceIn(n,code):'min $'+(S.cards[n].min??'?')}</span></div>`;
 }
 function render(){
@@ -222,12 +222,16 @@ const tip=document.createElement('img');tip.id='tip';document.body.appendChild(t
 document.addEventListener('mouseover',e=>{
   const h=e.target.closest&&e.target.closest('.hv');
   if(!h){tip.style.display='none';return}
-  if(tip.dataset.n!==h.dataset.n){
-    tip.dataset.n=h.dataset.n;
-    tip.src='https://api.scryfall.com/cards/named?exact='+encodeURIComponent(h.dataset.n)+'&format=image&version=normal';
+  const key=h.dataset.n+'|'+(h.dataset.s||'');
+  if(tip.dataset.k!==key){
+    tip.dataset.k=key;
+    const base='https://api.scryfall.com/cards/named?exact='+encodeURIComponent(h.dataset.n)+'&format=image&version=normal';
+    tip.dataset.fb=base;
+    tip.src=h.dataset.s?base+'&set='+encodeURIComponent(h.dataset.s):base;
   }
   tip.style.display='block';
 });
+tip.onerror=()=>{if(tip.dataset.fb&&tip.src!==tip.dataset.fb){tip.src=tip.dataset.fb}};
 document.addEventListener('mousemove',e=>{
   if(tip.style.display!=='block')return;
   let x=e.clientX+18;if(x+266>innerWidth)x=e.clientX-268;
